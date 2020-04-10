@@ -1,0 +1,28 @@
+#
+
+#vol/nginx/
+
+.env
+.env.*
+.env.local
+
+vol/nginx/conf.d/default.conf
+
+archive/
+
+/x/
+backup/
+certs/
+copyof/
+
+# docker-compose.yml
+
+.DS_Store
+node_modules
+# start.sh
+
+
+local.ini
+# docker.ini
+
+
