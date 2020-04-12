@@ -25,7 +25,7 @@ services:
       - ./vol/nginx/vhost.d:/etc/nginx/vhost.d:ro
       # - ./vol/nginx/conf.d:/etc/nginx/conf.d/
       - ./vol/nginx/conf.d/my_proxy.conf:/etc/nginx/conf.d/my_proxy.conf:ro
-
+      - ./nginx2.tmpl:/app/nginx.tmpl
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
     restart: always
@@ -155,6 +155,7 @@ services:
     image: memcached:1.5.6
     # container_name: seafile-memcached
     entrypoint: memcached -m 256
+    restart: unless-stopped
     networks:
       - sister
       # - seafile-net
@@ -165,6 +166,97 @@ services:
         max-file: "5"
 
 # ======================================================================
+
+
+
+# ======================================================================
+
+
+# seafile 4
+
+
+  seafile4:
+    image: seafileltd/seafile-mc:7.0.5
+    # container_name: seafile
+    restart: unless-stopped
+    ports:
+      - "14191:80"
+      - "8000:8000"
+      - "8082:8082"
+      #  - "443:443"  # If https is enabled, cancel the comment.
+    expose:
+      - "80"
+      - "8000"
+      - "8082"
+    env_file:
+      - .env.sf4
+    environment:
+      # - VIRTUAL_HOST=sf4.d.jgleba.com
+      # - LETSENCRYPT_HOST=sf4.d.jgleba.com
+      # - LETSENCRYPT_EMAIL=dgleba@gmail.com
+      - VIRTUAL_NETWORK=sister
+      - VIRTUAL_PORT=80
+    volumes:
+      - ../datasys/seafile4/sdata:/shared   
+      - ./wait-for-it.sh:/a/wait-for-it.sh   
+      #- ./seafile.nginx.conf.template:/templates/seafile.nginx.conf.template:ro
+    depends_on:
+      - db4
+      - memcached4
+    # at first startup, start db first, then seafile.
+    # This needs a command after the wait I think.... command: /a/wait-for-it.sh db:3306 --timeout=34 
+    networks:
+      - sister
+      # - seafile-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "5"
+
+
+  db4:
+    image: mariadb:10.4
+    # container_name: seafile-mysql
+    restart: unless-stopped
+    ports:
+      - "14192:3306"
+    #     - "443:443"  # If https is enabled, cancel the comment.
+    env_file:
+      - .env.sf4
+    volumes:
+      - ../datasys/seafile4/mariadb:/var/lib/mysql  
+    networks:
+      - sister
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "4"
+    depends_on:
+      - memcached4
+    command:
+      - --bind-address=0.0.0.0
+      - --default-authentication-plugin=mysql_native_password
+
+  memcached4:
+    image: memcached:1.5.6
+    # container_name: seafile-memcached
+    entrypoint: memcached -m 256
+    restart: unless-stopped
+    networks:
+      - sister
+      # - seafile-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100k"
+        max-file: "4"
+
+
+# ======================================================================
+
+
 
 
   # seafile:

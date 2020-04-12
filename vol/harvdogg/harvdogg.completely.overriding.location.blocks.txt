@@ -1,0 +1,151 @@
+
+
+
+completely.overriding.location.blocks
+
+
+harvdogg
+
+Added support for completely overriding the location blocks for proxi…
+
+
+2020-04-11_Sat_18.24-PM
+
+https://github.com/nginx-proxy/nginx-proxy/pull/1179
+
+
+
+_____________
+
+
+https://github.com/harvdogg/nginx-proxy/commit/c984ed2b18010db70ca2926967f8fc1e95d03a30?diff=unified
+
+
+
+Added support for completely overriding the location blocks for proxi…
+
+
+
+
+
+======================================================================
+
+How to generate a git patch for a specific commit?
+
+albe@ubu507e:~$ z harv
+albe@ubu507e:/srv/test/harvdogg-nginx-proxy$
+
+sha=593c3c29b0590ed2012dc5d4cc1863c6c3871bc0
+sha=c984ed2b18010db70ca2926967f8fc1e95d03a30
+git format-patch -1 $sha
+
+
+z tt
+ git clone https://github.com/nginx-proxy/nginx-proxy.git
+ 
+git apply 0001-Added-support-for-completely-overriding-the-location.patch
+
+
+======================================================================
+
+
+commit 593c3c29b0590ed2012dc5d4cc1863c6c3871bc0
+Author: Trent Harvey <trent@harvdog.net>
+Date:   Wed Oct 17 19:22:14 2018 -0700
+
+    Adjusted formatting on README
+
+diff --git a/README.md b/README.md
+index 2e07e7c..2309045 100644
+--- a/README.md
++++ b/README.md
+@@ -412,9 +412,9 @@ When using location overrides, you are responsible for handling any requests tha
+ to forward a request.  By default, nginx-proxy aliases containers to the defined `VIRTUAL_HOST` name.  So if you launch your container with a `VIRTUAL_HOST` value of `app.example.com`, then forwarding a request to your container would look something like this:
+ 
+ ```
+-	location / {
+-		proxy_pass http://app.example.com;
+-	}
++location / {
++	proxy_pass http://app.example.com;
++}
+ ```
+ 
+ If you are using an SSL-enabled container, you would use `https://` in place of `http://`.  You could include any number of other location blocks for nginx to consider and even forward requests to external hosts when they match certain conditions.  You can also use any other rules and instructions
+
+commit c984ed2b18010db70ca2926967f8fc1e95d03a30
+Author: Trent Harvey <trent@harvdog.net>
+Date:   Wed Oct 17 19:21:02 2018 -0700
+
+    Added support for completely overriding the location blocks for proxied containers.
+
+diff --git a/README.md b/README.md
+index 5c83548..2e07e7c 100644
+--- a/README.md
++++ b/README.md
+@@ -401,6 +401,25 @@ If you are using multiple hostnames for a single container (e.g. `VIRTUAL_HOST=e
+ If you want most of your virtual hosts to use a default single `location` block configuration and then override on a few specific ones, add those settings to the `/etc/nginx/vhost.d/default_location` file. This file
+ will be used on any virtual host which does not have a `/etc/nginx/vhost.d/{VIRTUAL_HOST}_location` file associated with it.
+ 
++#### Pre-VIRTUAL_HOST custom location blocks
++
++In some circumstances you may want to override nginx's default `/` location block behavior.  Typically, this block acts as a catch-all in order to forward requests not already matched by a specific `location` block directly onto your container as-is.
++
++To provide your own location blocks and bypass the automatic generation of them, simply add your location blocks to a configuration file file under `/etc/nginx/vhost.d` like in the other Per-VIRTUAL_HOST sections except with the suffix `_locations`. Notice the 's' to make the filename plural.  
++The contents of this file will replace all auto-generated location blocks. Additionally, this file will take priority over the previously described location configuration.
++
++When using location overrides, you are responsible for handling any requests that should be forwarded to your container. Passing a request to your container is done using the `proxy_pass` instruction within your defined location blocks.  `proxy_pass` expects a qualified hostname in order
++to forward a request.  By default, nginx-proxy aliases containers to the defined `VIRTUAL_HOST` name.  So if you launch your container with a `VIRTUAL_HOST` value of `app.example.com`, then forwarding a request to your container would look something like this:
++
++```
++	location / {
++		proxy_pass http://app.example.com;
++	}
++```
++
++If you are using an SSL-enabled container, you would use `https://` in place of `http://`.  You could include any number of other location blocks for nginx to consider and even forward requests to external hosts when they match certain conditions.  You can also use any other rules and instructions
++available to nginx location blocks.
++
+ ### Contributing
+ 
+ Before submitting pull requests or issues, please check github to make sure an existing issue or pull request is not already open.
+diff --git a/nginx.tmpl b/nginx.tmpl
+index d861050..f776c20 100644
+--- a/nginx.tmpl
++++ b/nginx.tmpl
+@@ -272,6 +272,9 @@ server {
+ 	include /etc/nginx/vhost.d/default;
+ 	{{ end }}
+ 
++	{{ if (exists (printf "/etc/nginx/vhost.d/%s_locations" $host)) }}
++	include {{ printf "/etc/nginx/vhost.d/%s_locations" $host}};
++	{{ else }}
+ 	location / {
+ 		{{ if eq $proto "uwsgi" }}
+ 		include uwsgi_params;
+@@ -294,6 +297,7 @@ server {
+ 		include /etc/nginx/vhost.d/default_location;
+ 		{{ end }}
+ 	}
++	{{ end }}
+ }
+ 
+ {{ end }}
+@@ -319,6 +323,9 @@ server {
+ 	include /etc/nginx/vhost.d/default;
+ 	{{ end }}
+ 
++	{{ if (exists (printf "/etc/nginx/vhost.d/%s_locations" $host)) }}
++	include {{ printf "/etc/nginx/vhost.d/%s_locations" $host}};
++	{{ else }}
+ 	location / {
+ 		{{ if eq $proto "uwsgi" }}
+ 		include uwsgi_params;
+@@ -340,6 +347,7 @@ server {
+ 		include /etc/nginx/vhost.d/default_location;
+ 		{{ end }}
+ 	}
++	{{ end }}
+ }
+ 
+ {{ if (and (not $is_https) (exists "/etc/nginx/certs/default.crt") (exists "/etc/nginx/certs/default.key")) }}
