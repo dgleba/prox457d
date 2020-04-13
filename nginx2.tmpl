@@ -417,7 +417,7 @@ server {
 
 
 
-# 22 for seafile4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 82 for seafile4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
   # sf4.d.jgleba.com
   # commented out..  upstream sf4.d.jgleba.com {..}
@@ -498,5 +498,112 @@ SHA:HIGH:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS';
         root /home/user/haiwen/seafile-server-latest/seahub;
     }       
   }
-# 22 for seafile4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# 82 for seafile4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# me ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # me.d.jgleba.com
+  upstream me.d.jgleba.com {
+          ## Can be connected with "sister" network
+			# listo429c_me_1
+			# server 172.21.0.16:8083;
+			server 172.27.0.30:6219;
+  }
+  server {
+    server_name me.d.jgleba.com;
+    listen 80 ;
+    access_log /var/log/nginx/access.log vhost;
+    # Do not HTTPS redirect LetsEncrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+      auth_basic off;
+      allow all;
+      root /usr/share/nginx/html;
+      try_files $uri =404;
+      break;
+    }
+    location / {
+      return 301 https://$host$request_uri;
+    }
+  }
+  server {
+    server_name me.d.jgleba.com;
+    listen 443 ssl http2 ;
+    access_log /var/log/nginx/access.log vhost;
+    ssl_session_timeout 5m;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+    ssl_certificate /etc/nginx/certs/me.d.jgleba.com.crt;
+    ssl_certificate_key /etc/nginx/certs/me.d.jgleba.com.key;
+    ssl_dhparam /etc/nginx/certs/me.d.jgleba.com.dhparam.pem;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/nginx/certs/me.d.jgleba.com.chain.pem;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    include /etc/nginx/vhost.d/default;
+    location / {
+      proxy_pass http://me.d.jgleba.com;
+    }
+  }
+
+# me ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# for d ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#
+# this was manually done. it was never handled by dockergen. I added this here manually.
+#
+# 1. created d.d in cloudflare 2020-04-12 08:25PM
+# 2. edit this conf.
+# 3. sftp://172.27.0.30/srv/dkr/listo429c/d-dot-d/index.html create index, and compose
+# 4. create config at sftp://172.27.0.30/srv/dkr/listo429c/docker/nginx_dd/default.conf
+#
+#
+#
+  # d.d.jgleba.com
+  upstream d.d.jgleba.com {
+          ## Can be connected with "sister" network
+			# listo429c_dd_1
+			# server 172.21.0.16:8083;
+			server 172.27.0.30:6221;
+  }
+  server {
+    server_name d.d.jgleba.com;
+    listen 80 ;
+    access_log /var/log/nginx/access.log vhost;
+    # Do not HTTPS redirect LetsEncrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+      auth_basic off;
+      allow all;
+      root /usr/share/nginx/html;
+      try_files $uri =404;
+      break;
+    }
+    location / {
+      return 301 https://$host$request_uri;
+    }
+  }
+  server {
+    server_name d.d.jgleba.com;
+    listen 443 ssl http2 ;
+    access_log /var/log/nginx/access.log vhost;
+    ssl_session_timeout 5m;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+    ssl_certificate /etc/nginx/certs/d.d.jgleba.com.crt;
+    ssl_certificate_key /etc/nginx/certs/d.d.jgleba.com.key;
+    ssl_dhparam /etc/nginx/certs/d.d.jgleba.com.dhparam.pem;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/nginx/certs/d.d.jgleba.com.chain.pem;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    include /etc/nginx/vhost.d/default;
+    location / {
+      proxy_pass http://d.d.jgleba.com;
+    }
+  }
+
+# for d ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 

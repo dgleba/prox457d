@@ -420,7 +420,7 @@ server {
 # 22 for seafile4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
-{{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST_SF4" "," }}
+{{ range $host, $containers := groupByMulti $ "Env.DG_VIRTUAL_HOST_SF4" "," }}
 
   {{ $host := trim $host }}
   {{ $is_regexp := hasPrefix "~" $host }}
