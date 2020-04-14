@@ -51,8 +51,9 @@ docker-compose exec jproxy cat /etc/nginx/conf.d/default.conf >docs-exclude/gene
 If you want to view files in your favorite editor, copy them to the host for viewing.
 
 ```
+
 src=proxy457d_jproxy_1:/etc/nginx
-out=../zout/jproxynginx4c
+out=../zout/jproxynginx4f
 mkdir -p $out
 docker cp $src $out
 

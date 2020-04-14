@@ -35,7 +35,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100k"
-        max-file: "5"
+        max-file: "3"
 
   lets:
     image: jrcs/letsencrypt-nginx-proxy-companion:v1.12.1
@@ -56,7 +56,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100k"
-        max-file: "5"
+        max-file: "3"
 
 
   seafile2:
@@ -124,7 +124,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100k"
-        max-file: "5"
+        max-file: "4"
 
 
   db:
@@ -145,7 +145,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100k"
-        max-file: "5"
+        max-file: "3"
     command:
       - --bind-address=0.0.0.0
       - --default-authentication-plugin=mysql_native_password
@@ -163,7 +163,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100k"
-        max-file: "5"
+        max-file: "2"
 
 # ======================================================================
 
@@ -212,7 +212,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100k"
-        max-file: "5"
+        max-file: "3"
 
 
   db4:
@@ -232,7 +232,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100k"
-        max-file: "4"
+        max-file: "3"
     depends_on:
       - memcached4
     command:
@@ -251,7 +251,7 @@ services:
       driver: "json-file"
       options:
         max-size: "100k"
-        max-file: "4"
+        max-file: "2"
 
 
 # ======================================================================

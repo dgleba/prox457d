@@ -424,10 +424,9 @@ server {
 
   upstream sf4.d.jgleba.com {
 			# proxy457d_seafile4_1
-		   server 172.27.0.30:14191;
+		  # server 172.27.0.30:14191;
 			# server 172.27.0.30:8000;
-			# server 172.27.0.30:8082;
-			# server 172.21.0.20:80;
+			 server 172.21.0.20:80;
   }
   
   server {
@@ -491,9 +490,7 @@ SHA:HIGH:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS';
     }
     location /seafhttp {
         rewrite ^/seafhttp(.*)$ $1 break;
-        # proxy_pass http://172.27.0.30:8082;
-        # proxy_pass http://sf4.d.jgleba.com:8082;
-        proxy_pass http://seafile4:8082;
+        proxy_pass http://172.27.0.30:8082;
         client_max_body_size 0;
         proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_read_timeout 36001s;
