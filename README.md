@@ -53,7 +53,7 @@ If you want to view files in your favorite editor, copy them to the host for vie
 ```
 
 src=proxy457d_jproxy_1:/etc/nginx
-out=../zout/jproxynginx4f
+out=../tmp/zout/jproxynginx4c
 mkdir -p $out
 docker cp $src $out
 

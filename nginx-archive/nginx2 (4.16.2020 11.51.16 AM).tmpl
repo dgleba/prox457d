@@ -1,22 +1,3 @@
-#
-#
-#
-# nginx2.tmpl modified by David Gleba 2020-04-16
-#
-# The stanza that generates each vhost config is marked below.
-# Copy it and edit as you wish. You could use a custom env variable like OVERRIDE_VIRTUAL_HOST=my.example.com
-# in docker-compose.yml instead of VIRTUAL_HOST=my.example.com and use your custom template code to generate
-# anything you wish for a particular vhost.
-# See the marker at approx line 200 like the one just below this line. 
-#   There is another one at the end of the stanza.
-# 11 vhosts stanza ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#
-#
-
-
-
-
 {{ $CurrentContainer := where $ "ID" .Docker.CurrentContainerID | first }}
 
 {{ $external_http_port := coalesce $.Env.HTTP_PORT "80" }}
@@ -188,20 +169,8 @@ server {
 {{ end }}
 
 
+# 11 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-
-
-
-
-
-#
-#
-#
-# 11 vhosts stanza ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#
-#
 
 {{ range $host, $containers := groupByMulti $ "Env.VIRTUAL_HOST" "," }}
 
@@ -443,42 +412,205 @@ server {
 
   {{ end }}
 {{ end }}
-#
-#
-#
-# 11 vhosts stanza ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#
-#
+
+# 11 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 
 
-#
-#
-#
-# 99 custom literal text configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#
-#
+# 82 for seafile4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-# Below are: custom includes to completely override a vhost.
-#
-# do not use the VIRTUAL_HOST env variable in docker-compose for these vhosts.
-# these have no template language in them. Just literal text.
-# To use template language the template would have to be in this file as no other file
-# is processed by docker-gen in this project.
-#
-#
-#
+  # sf4.d.jgleba.com
+  # commented out..  upstream sf4.d.jgleba.com {..}
 
-include /etc/nginx/jwilder-nginx-override/*.conf;
+  upstream sf4.d.jgleba.com {
+			# proxy457d_seafile4_1
+		   server 172.27.0.30:14191;
+			# server 172.27.0.30:8000;
+			# server 172.27.0.30:8082;
+			# server 172.21.0.20:80;
+  }
   
-#
-#
-#  
-# 99 custom literal text configs ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-#
-#
-#  
+  server {
+    server_name sf4.d.jgleba.com;
+    listen 80 ;
+
+    access_log /var/log/nginx/access.log vhost;
+    # Do not HTTPS redirect LetsEncrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+      auth_basic off;
+      allow all;
+      root /usr/share/nginx/html;
+      try_files $uri =404;
+      break;
+    }
+
+    #rewrite ^ https://$http_host$request_uri? permanent; # force redirect http to https
     
+    location / {
+      return 301 https://$host$request_uri;
+    }
     
+    server_tokens off; 
+  }
+  server {
+    server_name sf4.d.jgleba.com;
+    listen 443 ssl;
+    # depricated.. ssl on;
+    access_log /var/log/nginx/access.log vhost;
+    ssl_session_timeout 5m;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+    ssl_certificate /etc/nginx/certs/sf4.d.jgleba.com.crt;
+    ssl_certificate_key /etc/nginx/certs/sf4.d.jgleba.com.key;
+    ssl_dhparam /etc/nginx/certs/sf4.d.jgleba.com.dhparam.pem;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/nginx/certs/sf4.d.jgleba.com.chain.pem;
+    
+    # secure settings (A+ at SSL Labs ssltest at time of writing)
+    # see https://wiki.mozilla.org/Security/Server_Side_TLS#Nginx
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+    ssl_ciphers 'ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-
+AES128-SHA256:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-AES128-SHA256:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:DHE-RSA-AES256-GCM-
+SHA384:DHE-RSA-AES256-SHA256:DHE-RSA-AES256-SHA:DHE-RSA-CAMELLIA256-SHA:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-SEED-SHA:DHE-RSA-CAMELLIA128-
+SHA:HIGH:!aNULL:!eNULL:!LOW:!3DES:!MD5:!EXP:!PSK:!SRP:!DSS';
+    ssl_prefer_server_ciphers on;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+    server_tokens off;    
+
+    location / {
+    proxy_pass http://sf4.d.jgleba.com;
+    proxy_set_header   Host $host;
+    proxy_set_header   X-Real-IP $remote_addr;
+    proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header   X-Forwarded-Host $server_name;
+    proxy_set_header   X-Forwarded-Proto https;
+    proxy_read_timeout 36001s;
+    client_max_body_size 0;
+    }
+    location /seafhttp {
+        rewrite ^/seafhttp(.*)$ $1 break;
+        # proxy_pass http://172.27.0.30:8082;
+        # proxy_pass http://sf4.d.jgleba.com:8082;
+        proxy_pass http://seafile4:8082;
+        client_max_body_size 0;
+        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_read_timeout 36001s;
+        proxy_connect_timeout  36000s;
+        proxy_send_timeout  36000s;
+        send_timeout  36000s;
+    }
+    #location /media {
+    #    root /home/user/haiwen/seafile-server-latest/seahub;
+    #}       
+  }
+# 82 for seafile4 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# me ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  # me.d.jgleba.com
+  upstream me.d.jgleba.com {
+          ## Can be connected with "sister" network
+			# listo429c_me_1
+			# server 172.21.0.16:8083;
+			server 172.27.0.30:6219;
+  }
+  server {
+    server_name me.d.jgleba.com;
+    listen 80 ;
+    access_log /var/log/nginx/access.log vhost;
+    # Do not HTTPS redirect LetsEncrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+      auth_basic off;
+      allow all;
+      root /usr/share/nginx/html;
+      try_files $uri =404;
+      break;
+    }
+    location / {
+      return 301 https://$host$request_uri;
+    }
+  }
+  server {
+    server_name me.d.jgleba.com;
+    listen 443 ssl http2 ;
+    access_log /var/log/nginx/access.log vhost;
+    ssl_session_timeout 5m;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+    ssl_certificate /etc/nginx/certs/me.d.jgleba.com.crt;
+    ssl_certificate_key /etc/nginx/certs/me.d.jgleba.com.key;
+    ssl_dhparam /etc/nginx/certs/me.d.jgleba.com.dhparam.pem;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/nginx/certs/me.d.jgleba.com.chain.pem;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    include /etc/nginx/vhost.d/default;
+    location / {
+      proxy_pass http://me.d.jgleba.com;
+    }
+  }
+
+# me ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+# for d ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#
+# this was manually done. it was never handled by dockergen. I added this here manually.
+#
+# 1. created d.d in cloudflare 2020-04-12 08:25PM
+# 2. edit this conf.
+# 3. sftp://172.27.0.30/srv/dkr/listo429c/d-dot-d/index.html create index, and compose
+# 4. create config at sftp://172.27.0.30/srv/dkr/listo429c/docker/nginx_dd/default.conf
+#
+#
+#
+  # d.d.jgleba.com
+  upstream d.d.jgleba.com {
+          ## Can be connected with "sister" network
+			# listo429c_dd_1
+			# server 172.21.0.16:8083;
+			server 172.27.0.30:6221;
+  }
+  server {
+    server_name d.d.jgleba.com;
+    listen 80 ;
+    access_log /var/log/nginx/access.log vhost;
+    # Do not HTTPS redirect LetsEncrypt ACME challenge
+    location /.well-known/acme-challenge/ {
+      auth_basic off;
+      allow all;
+      root /usr/share/nginx/html;
+      try_files $uri =404;
+      break;
+    }
+    location / {
+      return 301 https://$host$request_uri;
+    }
+  }
+  server {
+    server_name d.d.jgleba.com;
+    listen 443 ssl http2 ;
+    access_log /var/log/nginx/access.log vhost;
+    ssl_session_timeout 5m;
+    ssl_session_cache shared:SSL:50m;
+    ssl_session_tickets off;
+    ssl_certificate /etc/nginx/certs/d.d.jgleba.com.crt;
+    ssl_certificate_key /etc/nginx/certs/d.d.jgleba.com.key;
+    ssl_dhparam /etc/nginx/certs/d.d.jgleba.com.dhparam.pem;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    ssl_trusted_certificate /etc/nginx/certs/d.d.jgleba.com.chain.pem;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    include /etc/nginx/vhost.d/default;
+    location / {
+      proxy_pass http://d.d.jgleba.com;
+    }
+  }
+
+# for d ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
