@@ -1,6 +1,6 @@
 #
 
-docker-compose.yml
+#docker-compose.yml
 
 docs-exclude/
 
@@ -19,7 +19,6 @@ backup/
 certs/
 copyof/
 
-# docker-compose.yml
 
 .DS_Store
 node_modules
