@@ -69,6 +69,7 @@ services:
 
 
   seafile4:
+    # http://172.27.0.30:14191
     image: seafileltd/seafile-mc:7.0.5
     # container_name: seafile
     restart: unless-stopped

@@ -1,0 +1,65 @@
+
+works I think.
+
+
+
+1.
+
+2021-08-06_Fri_16.27-PM first try.
+
+# create a new directory to store the configuration:
+ mkdir shaarli && cd shaarli
+# Download the latest version of Shaarli's docker-compose.yml
+ curl -L https://raw.githubusercontent.com/shaarli/Shaarli/latest/docker-compose.yml -o docker-compose.yml
+# Create the .env file and fill in your VPS and domain information
+# (replace <shaarli.mydomain.org>, <admin@mydomain.org> and <latest> with your actual information)
+ echo 'SHAARLI_VIRTUAL_HOST=shaarli.mydomain.org' > .env
+$ echo 'SHAARLI_LETSENCRYPT_EMAIL=admin@mydomain.org' >> .env
+# Available Docker tags can be found at https://hub.docker.com/r/shaarli/shaarli/tags
+ echo 'SHAARLI_DOCKER_TAG=latest' >> .env
+# Pull the Docker images
+ docker-compose pull
+# Run!
+ docker-compose up 
+ 
+
+ 2.
+
+ edited compose file.
+ 
+ running locally.
+
+
+3.
+
+eg:
+src=quick-bind-sync_phpp_1:/var/www
+out=/srv/x/qbp56
+mkdir -p $out
+docker cp $src $out
+
+
+src=shaarli601c_shaarli_1:/var/www/shaarli/data  
+out=/srv/dkr/_copy/sharrlidata
+mkdir -p $out
+docker cp $src $out
+
+
+
+3x.
+
+/var/lib/docker/volumes 
+
+root@vamp398:/var/lib/docker/volumes/shaarli601c_shaarli-data/_data# ls
+config.json.php  datastore.php  history.php  ipbans.php  log.txt  updates.txt
+root@vamp398:/var/lib/docker/volumes/shaarli601c_shaarli-data/_data#
+
+cd /var/lib/docker/volumes/shaarli601c_shaarli-data/_data
+
+sudo chmod o+rx -R /var/lib/docker/volumes/shaarli601c_shaarli-data/_data
+
+
+4.
+
+
+
