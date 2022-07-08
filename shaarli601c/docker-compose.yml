@@ -39,6 +39,7 @@ services:
       # above not working. It must be this??
       - shaarli-cache:/var/www/shaarli/cache
       - shaarli-data:/var/www/shaarli/data
+    restart: always
     ports:
       - 14811:80
       # - 443:443

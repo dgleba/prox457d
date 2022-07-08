@@ -31,7 +31,7 @@ services:
       - ./vol/nginx/jwilder-nginx-override:/etc/nginx/jwilder-nginx-override
     labels:
       com.github.jrcs.letsencrypt_nginx_proxy_companion.nginx_proxy: "true"
-    restart: always
+    #restart: always
     networks:
       - sister
     logging:
@@ -47,7 +47,7 @@ services:
       - ./vol/nginx/vhost.d:/etc/nginx/vhost.d
       - ./vol/nginx/certs:/etc/nginx/certs:rw
       - ./vol/nginx/html:/usr/share/nginx/html
-    restart: always
+    #restart: always
     networks:
       - sister
     depends_on:
