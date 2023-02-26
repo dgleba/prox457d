@@ -1,0 +1,52 @@
+version: "3.6"
+
+networks:
+  sister2:
+    name: sister2
+
+services:
+
+  # Cloudflare Tunnel Container
+  tunnel507:
+    image: cloudflare/cloudflared
+    command: tunnel  --no-autoupdate  run  --token ${TUNNEL_TOKEN} 
+    restart: unless-stopped
+    # environment:
+    #   TUNNEL_TOKEN: ${TUNNEL_TOKEN} 
+    user:  root
+    depends_on:
+      - web2
+      # - main
+    networks:
+      - sister2
+
+  web2:
+    # a website served by nginx
+    # this can also be used to test proxy or tunnel
+    # http://web-108-168-7-24.nip.io/
+    # https://web.198.144.183.160.nip.io/
+    image: nginx:1.23-alpine
+    volumes:
+      - ./site:/usr/share/nginx/html
+    ports:
+      - "1280:80"
+      # - "12443:443"
+    # expose:
+      # - "80"
+    # environment:
+      # - VIRTUAL_HOST=davegg.com,198.144.183.160.nip.io,d.davegg.com
+      # - VIRTUAL_PORT=80
+      # - LETSENCRYPT_HOST=davegg.com,198.144.183.160.nip.io,d.davegg.com
+      #- LETSENCRYPT_HOST=web.c617eef4.nip.io
+      # - LETSENCRYPT_EMAIL=dgleba@gmail.com
+    restart: always
+    networks:
+      - sister2
+
+
+# volumes:
+  # db:
+  # data:
+  # nextcloud:
+  # nextcloud_db:
+

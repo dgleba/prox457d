@@ -1,0 +1,59 @@
+version: "3.6"
+
+networks:
+  sister2:
+    name: sister2
+
+services:
+
+# https://techsparx.com/software-development/docker/self-hosting/nextcloud.html      
+
+  ncdb:
+    image: mariadb:10.6
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    # networks:
+    #   - cloudnet
+    volumes:
+      - ../sysdata/ncdb:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+    networks:
+      - sister2
+
+  nextcl:
+    image: nextcloud:25
+    restart: always
+    # networks:
+    #   - cloudnet
+    ports:
+     - 28080:80
+    expose:
+      - "80"
+    volumes:
+      - ../sysdata/ncdocroot:/var/www/html
+    environment:
+      - NEXTCLOUD_DATA_DIR=/var/www/html/data
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=ncdb
+      - NEXTCLOUD_TRUSTED_DOMAINS=172.17.0.10:28080 nc.d.gleba.ca
+    networks:
+      - sister2
+
+# networks:
+#   cloudnet:
+#     name: cloudnet
+#     driver: bridge
+
+# volumes:
+  # db:
+  # data:
+  # nextcloud:
+  # nextcloud_db:
+
+

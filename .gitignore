@@ -1,6 +1,6 @@
 #
-
 #docker-compose.yml
+sysdata/
 
 docs-exclude/
 
@@ -13,17 +13,14 @@ docs-exclude/
 vol/nginx/conf.d/default.conf
 
 archive/
-
 /x/
 backup/
 certs/
 copyof/
 
-
 .DS_Store
 node_modules
 # start.sh
-
 
 local.ini
 # docker.ini

@@ -1,0 +1,116 @@
+version: "3.7"
+
+networks:
+  sister2:
+    name: sister2
+
+services:
+
+  # Cloudflare Tunnel Container
+  tunnel:
+    image: cloudflare/cloudflared
+    command: tunnel  --no-autoupdate  run  --token ${TUNNEL_TOKEN} 
+    restart: unless-stopped
+    # environment:
+    #   TUNNEL_TOKEN: ${TUNNEL_TOKEN} 
+    user:  root
+    depends_on:
+      - sf5
+      # - main
+    networks:
+      - sister2
+
+
+  db:
+    image: mariadb:10.5
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
+      MYSQL_LOG_CONSOLE: 'true'
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      - sister2
+
+  memcached:
+    image: memcached:1.6
+    entrypoint: memcached -m 256
+    networks:
+      - sister2
+
+  sf5:
+    image: seafileltd/seafile-mc:latest
+    volumes:
+      - data:/shared
+    # ports:
+    #   - "14191:80"
+    #   - "8000:8000"
+    #   - "8082:8082"
+    #  - "443:443"  # If https is enabled, cancel the comment.
+    expose:
+      - "80"
+      - "8000"
+      - "8082"
+    environment:
+      DB_HOST: db
+      DB_ROOT_PASSWD: ${DB_PASSWORD}  
+      TIME_ZONE: America/Detroit
+      SEAFILE_SERVER_LETSENCRYPT: 'false'
+      SEAFILE_ADMIN_EMAIL: dgleba@gmail.com
+      SEAFILE_SERVER_HOSTNAME: sf5.davegg.com
+      SEAFILE_ADMIN_PASSWORD: ${SEAFILE_ADMIN_PASSWORD}
+    depends_on:
+      - db
+      - memcached
+    networks:
+      - sister2
+
+
+# https://techsparx.com/software-development/docker/self-hosting/nextcloud.html      
+
+  ncdb:
+    image: mariadb:10.5
+    restart: always
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    # networks:
+    #   - cloudnet
+    volumes:
+      - ./sysdata/ncdb:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+    networks:
+      - sister2
+
+  nextcloud:
+    image: nextcloud:25-fpm-alpine
+    restart: always
+    # networks:
+    #   - cloudnet
+    ports:
+     - 28080:80
+    expose:
+      - "80"
+    volumes:
+      - ./sysdata/ncdocroot:/var/www/html
+    environment:
+      - NEXTCLOUD_DATA_DIR=/var/www/html/data
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=ncdb
+    networks:
+      - sister2
+
+# networks:
+#   cloudnet:
+#     name: cloudnet
+#     driver: bridge
+
+volumes:
+  db:
+  data:
+  # nextcloud:
+  # nextcloud_db:
+
